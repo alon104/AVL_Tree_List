@@ -27,7 +27,7 @@ class AVLNode(object):
 	@returns: the left child of self, None if there is no left child
 	"""
 	def getLeft(self):
-		return None
+		return self.left
 
 
 	"""returns the right child
