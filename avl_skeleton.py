@@ -9,7 +9,7 @@
 """A class represnting a node in an AVL tree"""
 
 class AVLNode(object):
-	"""Constructor, you are allowed to add more fields. 
+	"""Constructor, you are allowed to add more fields.
 
 	@type value: str
 	@param value: data of your node
@@ -20,7 +20,7 @@ class AVLNode(object):
 		self.right = None
 		self.parent = None
 		self.height = -1
-		
+
 
 	"""returns the left child
 	@rtype: AVLNode
@@ -124,6 +124,7 @@ class AVLTreeList(object):
 	"""
 	def __init__(self):
 		self.root = None
+		self.length = 0
 		# add your fields here
 
 
@@ -145,7 +146,9 @@ class AVLTreeList(object):
 	@returns: the the value of the i'th item in the list
 	"""
 	def retrieve(self, i):
-		return None
+		if i < 0 or !self.root.isRealNode() or self.root.rank > i+1:
+			return None
+		return retrieve_rec(self.root, i+1)
 
 	"""inserts val at position i in the list
 
@@ -179,7 +182,7 @@ class AVLTreeList(object):
 	@returns: the value of the first item, None if the list is empty
 	"""
 	def first(self):
-		return None
+		return self.first
 
 	"""returns the value of the last item in the list
 
@@ -187,7 +190,7 @@ class AVLTreeList(object):
 	@returns: the value of the last item, None if the list is empty
 	"""
 	def last(self):
-		return None
+		return self.last
 
 	"""returns an array representing list 
 
@@ -203,7 +206,7 @@ class AVLTreeList(object):
 	@returns: the size of the list
 	"""
 	def length(self):
-		return None
+		return self.length
 
 	"""splits the list at the i'th index
 
@@ -235,7 +238,11 @@ class AVLTreeList(object):
 	@returns: the first index that contains val, -1 if not found.
 	"""
 	def search(self, val):
-		return None
+		avl_list = self.listToArray()
+		for i in range(self.length):
+			if avl_list[i] == val:
+				return i
+		return -1
 
 
 
@@ -248,3 +255,16 @@ class AVLTreeList(object):
 		return None
 
 
+def retrieve_rec(root, i):
+	if root.left.isRealNode():
+		left_sub = root.left.rank + 1
+		if left_sub == i:
+			return left_sub
+		elif i < left_sub:
+			return retrieve_rec(root.left, i)
+		else:
+			return retrieve_rec(root.right, i - left_sub)
+	elif i == 1: ##if no sub_tree to the left
+		return root
+	elif root.right.isRealNode():
+		return retrieve_rec(root.right, i - 1)
