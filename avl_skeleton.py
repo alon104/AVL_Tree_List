@@ -124,7 +124,6 @@ class AVLTreeList(object):
 	"""
 	def __init__(self):
 		self.root = None
-		self.length = 0
 		# add your fields here
 
 
@@ -268,3 +267,4 @@ def retrieve_rec(root, i):
 		return root
 	elif root.right.isRealNode():
 		return retrieve_rec(root.right, i - 1)
+
