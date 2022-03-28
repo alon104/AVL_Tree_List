@@ -11,6 +11,7 @@
 class AVLNode(object):
     """Constructor, you are allowed to add more fields.
 
+
 	@type value: str
 	@param value: data of your node
 	"""
@@ -210,8 +211,11 @@ class AVLTreeList(object):
 	@returns: the the value of the i'th item in the list
 	"""
 
-    def retrieve(self, i):
-        return None
+	def retrieve(self, i):
+		if i < 0 or !self.root.isRealNode() or self.root.rank > i+1:
+			return None
+		return retrieve_rec(self.root, i+1)
+
 
     """inserts val at position i in the list
 
@@ -244,18 +248,20 @@ class AVLTreeList(object):
 	@rtype: str
 	@returns: the value of the first item, None if the list is empty
 	"""
-
-    def first(self):
-        return None
+    
+	def first(self):
+		return self.first
 
     """returns the value of the last item in the list
 
 	@rtype: str
 	@returns: the value of the last item, None if the list is empty
 	"""
+    
+	def last(self):
+		return self.last
 
-    def last(self):
-        return None
+
 
     """returns an array representing list 
 
@@ -272,8 +278,9 @@ class AVLTreeList(object):
 	@returns: the size of the list
 	"""
 
-    def length(self):
-        return None
+	def length(self):
+		return self.length
+
 
     """splits the list at the i'th index
 
@@ -307,8 +314,14 @@ class AVLTreeList(object):
 	@returns: the first index that contains val, -1 if not found.
 	"""
 
-    def search(self, val):
-        return None
+	def search(self, val):
+		avl_list = self.listToArray()
+		for i in range(self.length):
+			if avl_list[i] == val:
+				return i
+		return -1
+
+
 
     """returns the root of the tree representing the list
 
@@ -319,4 +332,18 @@ class AVLTreeList(object):
     def getRoot(self):
         return None
 
+
+def retrieve_rec(root, i):
+	if root.left.isRealNode():
+		left_sub = root.left.rank + 1
+		if left_sub == i:
+			return left_sub
+		elif i < left_sub:
+			return retrieve_rec(root.left, i)
+		else:
+			return retrieve_rec(root.right, i - left_sub)
+	elif i == 1: ##if no sub_tree to the left
+		return root
+	elif root.right.isRealNode():
+		return retrieve_rec(root.right, i - 1)
 
