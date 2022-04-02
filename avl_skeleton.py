@@ -52,9 +52,7 @@ class AVLNode(object):
     """
 
     def getParent(self):
-        if self.parent.isRealNode():
-            return self.parent
-        return None
+        return self.parent
 
     """return the value
 
@@ -77,7 +75,7 @@ class AVLNode(object):
     def getHeight(self):
         if self.isRealNode():
             return self.height
-        return None
+        return -1
 
     """sets left child
 
@@ -86,8 +84,7 @@ class AVLNode(object):
     """
 
     def setLeft(self, node):
-        if self.left.isRealNode():
-            self.left = node
+        self.left = node
         return None
 
     """sets right child
@@ -97,8 +94,7 @@ class AVLNode(object):
     """
 
     def setRight(self, node):
-        if self.right.isRealNode():
-            self.right = node
+        self.right = node
         return None
 
     """sets parent
@@ -108,8 +104,7 @@ class AVLNode(object):
     """
 
     def setParent(self, node):
-        if self.parent.isRealNode():
-            self.parent = node
+        self.parent = node
         return None
 
     """sets value
@@ -119,8 +114,7 @@ class AVLNode(object):
     """
 
     def setValue(self, value):
-        if self.isRealNode():
-            self.value = value
+        self.value = value
         return None
 
     """sets the balance factor of the node
@@ -144,34 +138,6 @@ class AVLNode(object):
         else:
             return True
 
-    def successor(self):  # returns the next object in the list
-        if self.right.isRealNode():
-            son = self.right
-            while son.left.isRealNode:
-                son = son.left
-            return son
-        else:
-            father = self.parent
-            current = self
-            while father.isRealNode and father.right == current:
-                current = father
-                father = father.parent
-            return father
-
-    def predecessor(self):  # returns the previous object in the list
-        if self.left.isRealNode():
-            son = self.left
-            while son.right.isRealNode:
-                son = son.right
-            return son
-        else:
-            father = self.parent
-            current = self
-            while father.isRealNode and father.left == current:
-                current = father
-                father = father.parent
-            return father
-
 
 """
 A class implementing the ADT list, using an AVL tree.
@@ -186,9 +152,10 @@ class AVLTreeList(object):
 
     def __init__(self):
         self.root = None
-        self.first = None
-        self.last = None
-        self.length = 0
+        self.firstNode = None
+        self.lastNode = None
+        self.lengthOfTree = 0
+        self.virtualParent = AVLNode(None)
 
     """returns whether the list is empty
 
@@ -197,10 +164,18 @@ class AVLTreeList(object):
     """
 
     def empty(self):
-        if self.root.height == -1:
+        if self.lengthOfTree == 0:
             return True
         else:
             return False
+
+    def setVirtualSons(self, node):
+        node.left = AVLNode(None)
+        node.left.parent = node
+        node.right = AVLNode(None)
+        node.right.parent = node
+        node.height = 0
+        node.size = 1
 
     """retrieves the value of the i'th item in the list
 
@@ -212,10 +187,24 @@ class AVLTreeList(object):
     """
 
     def retrieve(self, i):
-        if i < 0 or not self.root.isRealNode() or self.root.size > i+1:
-            return None
-        return retrieve_rec(self.root, i+1)
+        def retrieve_rec(root, j):
+            if root.left.isRealNode():
+                left_subtree_size = root.left.size + 1
+                if left_subtree_size == j:
+                    return root
 
+                elif j < left_subtree_size:
+                    return retrieve_rec(root.left, j)
+                else:
+                    return retrieve_rec(root.right, j - left_subtree_size)
+            elif j == 1:  ##if no sub_tree to the left
+                return root
+            elif root.right.isRealNode():
+                return retrieve_rec(root.right, j - 1)
+
+        if i < 0 or not self.lengthOfTree == 0 or self.root.size > i + 1:
+            return None
+        return retrieve_rec(self.root, i + 1).value
 
     """inserts val at position i in the list
 
@@ -229,7 +218,181 @@ class AVLTreeList(object):
     """
 
     def insert(self, i, val):
-        return -1
+        if i == 0 and self.lengthOfTree != 0:
+            self.insert_first(val)
+            leaf = self.firstNode
+        elif i == self.lengthOfTree and self.lengthOfTree != 0:
+            self.insert_last(val)
+            leaf = self.lastNode
+        elif i == 0 and self.lengthOfTree == 0:
+            self.insertRoot(val)
+            return
+        elif i < 0 or i > self.lengthOfTree:
+            return
+        else:
+            leaf = self.insert_middle(i, val)
+
+        self.correctSize(leaf)
+        while leaf.isRealNode():
+            ballanceFactor = leaf.left.height - leaf.right.height
+            if -2 < ballanceFactor < 2 and leaf.height == max(leaf.right.height, leaf.left.height) + 1:
+                break
+            elif -2 < ballanceFactor < 2:
+                leaf.height = max(leaf.right.height, leaf.left.height) + 1
+                leaf = leaf.parent
+            elif ballanceFactor == -2:
+                self.leftRotation(leaf)
+            else:
+                self.rightRotaion(leaf)
+
+    def insert_middle(self, i, val):
+        tmp = self.get_node(i)  ##current at index i at the list
+        if tmp.left.isRealNode:
+            tmp2 = self.predecessor(tmp)
+            tmp2.right = AVLNode(val)
+            tmp2.right.height = 0
+            tmp2.right.parent = tmp2
+            self.setVirtualSons(tmp2.right)
+            self.lengthOfTree += 1
+            leaf = tmp2.right
+        else:
+            tmp.left = AVLNode(val)
+            tmp.left.height = 0
+            self.setVirtualSons(tmp.left)
+            self.lengthOfTree += 1
+            leaf = tmp.left
+        return leaf
+
+    def insert_first(self, val):
+        self.firstNode.left = AVLNode(val)
+        self.setVirtualSons(self.firstNode)
+        self.firstNode = self.firstNode.left
+        self.lengthOfTree += 1
+        self.firstNode.height = 0
+
+    def insert_last(self, val):
+        self.lastNode.right = AVLNode(val)
+        self.setVirtualSons(self.lastNode)
+        self.lastNode = self.lastNode.right
+        self.lengthOfTree += 1
+        self.lastNode.height = 0
+
+    def insertRoot(self, val):
+        self.root = AVLNode(val)
+        self.root.parent = self.virtualParent
+        self.setVirtualSons(self.root)
+        self.lengthOfTree += 1
+        self.root.height = 0
+        self.root.size += 1
+
+    def rightRotaion(self, node):
+        isLR = False
+        if node.left.left.height - node.left.right.height == -1:
+            isLR = True
+            tmpLeft = node.left
+            node.left = node.left.right
+            node.left.parent = node  #
+            tmpLeft.right = node.left.left
+            tmpLeft.right.parent = tmpLeft
+            node.left.left = tmpLeft
+            tmpLeft.parent = node.left
+        boolie = True if node.parent.left == node else False
+        node.left.parent = node.parent
+        if boolie:
+            node.parent.left = node.left
+        else:
+            node.parent.right = node.left
+        node.parent = node.left
+        node.left = node.left.right
+        node.parent.right = node
+        node.left.parent = node
+
+        node.height = max(node.left.height, node.right.height) + 1  ##fixing heights
+        if isLR:
+            node.parent.left.height = max(node.parent.left.left.height, node.parent.left.right.height) + 1
+        node.parent.height = max(node.parent.left.height, node.height) + 1
+        node.parent.size = node.size  ##fixing sizes
+        node.size = node.left.size + node.right.size + 1
+
+    def leftRotation(self, node):
+        isRL = False
+        if node.right.left.height - node.right.right.height == 1:
+            isRL = True
+            tmpright = node.right
+            node.right = node.right.left
+            node.right.parent = node
+            tmpright.left = node.right.right
+            tmpright.left.parent = tmpright
+            node.right.right = tmpright
+            tmpright.parent = node.right
+        boolie = True if node.parent.left == node else False
+        node.right.parent = node.parent
+        if boolie:
+            node.parent.left = node.right
+        else:
+            node.parent.right = node.right
+        node.parent = node.right
+        node.right = node.right.left
+        node.parent.left = node
+        node.left.parent = node
+
+        node.height = max(node.left.height, node.right.height) + 1  ##fixing heights
+        if isRL:
+            node.parent.right.height = max(node.parent.right.left.height, node.parent.right.right.height) + 1
+        node.parent.height = max(node.parent.left.height, node.height) + 1
+        node.parent.size = node.size  ##fixing sizes
+        node.size = node.left.size + node.right.size + 1
+
+    def correctSize(self, node):
+        while node.isRealNode:
+            node.size += 1
+            node = node.parent
+
+    def successor(self, node):  # returns the next object in the list
+        if node.right.isRealNode():
+            son = node.right
+            while son.left.isRealNode:
+                son = son.left
+            return son
+        else:
+            father = node.parent
+            current = node
+            while father.isRealNode and father.right == current:
+                current = father
+                father = father.parent
+            return father
+
+    def predecessor(self, node):  # returns the previous object in the list
+        if node.left.isRealNode():
+            son = node.left
+            while son.right.isRealNode:
+                son = son.right
+            return son
+        else:
+            father = node.parent
+            current = node
+            while father.isRealNode and father.left == current:
+                current = father
+                father = father.parent
+            return father
+
+    def get_node(self, i):
+        def get_node_rec(root, j):
+            if root.left.isRealNode():
+                left_subtree_size = root.left.rank + 1
+                if left_subtree_size == j:
+                    return root
+
+                elif j < left_subtree_size:
+                    return get_node_rec(root.left, j)
+                else:
+                    return get_node_rec(root.right, j - left_subtree_size)
+            elif j == 1:  ##if no sub_tree to the left
+                return root
+            elif root.right.isRealNode():
+                return get_node_rec(root.right, j - 1)
+
+        return get_node_rec(self.root, i + 1)
 
     """deletes the i'th item in the list
 
@@ -248,7 +411,7 @@ class AVLTreeList(object):
     @rtype: str
     @returns: the value of the first item, None if the list is empty
     """
-    
+
     def first(self):
         return self.first
 
@@ -261,8 +424,6 @@ class AVLTreeList(object):
     def last(self):
         return self.last
 
-
-
     """returns an array representing list 
 
     @rtype: list
@@ -270,7 +431,19 @@ class AVLTreeList(object):
     """
 
     def listToArray(self):
-        return None
+        def listToArayRec(node, lst, index):
+            if not node.isRealNode:
+                return
+
+            listToArayRec(node.left, lst, index)
+            lst[index] = node.value
+            index += 1
+            listToArayRec(node.right, lst, index)
+            return lst
+
+        lst = []
+        i = 0
+        return listToArayRec(self.root, lst, i)
 
     """returns the size of the list 
 
@@ -280,7 +453,6 @@ class AVLTreeList(object):
 
     def length(self):
         return self.length
-
 
     """splits the list at the i'th index
 
@@ -316,12 +488,10 @@ class AVLTreeList(object):
 
     def search(self, val):
         avl_list = self.listToArray()
-        for i in range(self.length):
+        for i in range(self.lengthOfTree):
             if avl_list[i] == val:
                 return i
         return -1
-
-
 
     """returns the root of the tree representing the list
 
@@ -330,20 +500,78 @@ class AVLTreeList(object):
     """
 
     def getRoot(self):
-        return None
+        return self.root
 
 
-def retrieve_rec(root, i):
-    if root.left.isRealNode():
-        left_sub = root.left.rank + 1
-        if left_sub == i:
-            return left_sub
-        elif i < left_sub:
-            return retrieve_rec(root.left, i)
+###tester
+def printree(t, bykey=True):
+    """Print a textual representation of t
+    bykey=True: show keys instead of values"""
+    # for row in trepr(t, bykey):
+    #        print(row)
+    return trepr(t, bykey)
+
+
+def trepr(t, bykey=False):
+    """Return a list of textual representations of the levels in t
+    bykey=True: show keys instead of values"""
+    if t == None:
+        return ["#"]
+
+    thistr = str(t.key) if bykey else str(t.val)
+
+    return conc(trepr(t.left, bykey), thistr, trepr(t.right, bykey))
+
+
+def conc(left, root, right):
+    """Return a concatenation of textual represantations of
+    a root node, its left node, and its right node
+    root is a string, and left and right are lists of strings"""
+
+    lwid = len(left[-1])
+    rwid = len(right[-1])
+    rootwid = len(root)
+
+    result = [(lwid + 1) * " " + root + (rwid + 1) * " "]
+
+    ls = leftspace(left[0])
+    rs = rightspace(right[0])
+    result.append(ls * " " + (lwid - ls) * "_" + "/" + rootwid * " " + "\\" + rs * "_" + (rwid - rs) * " ")
+
+    for i in range(max(len(left), len(right))):
+        row = ""
+        if i < len(left):
+            row += left[i]
         else:
-            return retrieve_rec(root.right, i - left_sub)
-    elif i == 1: ##if no sub_tree to the left
-        return root
-    elif root.right.isRealNode():
-        return retrieve_rec(root.right, i - 1)
+            row += lwid * " "
 
+        row += (rootwid + 2) * " "
+
+        if i < len(right):
+            row += right[i]
+        else:
+            row += rwid * " "
+
+        result.append(row)
+
+    return result
+
+
+def leftspace(row):
+    """helper for conc"""
+    # row is the first row of a left node
+    # returns the index of where the second whitespace starts
+    i = len(row) - 1
+    while row[i] == " ":
+        i -= 1
+    return i + 1
+
+
+def rightspace(row):
+    """helper for conc"""
+    # row is the first row of a right node
+    # returns the index of where the first whitespace ends
+    i = 0
+    while row[i] == " ":
+        i += 1
+    return i
