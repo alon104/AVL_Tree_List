@@ -232,6 +232,7 @@ class AVLTreeList(object):
         else:
             leaf = self.insert_middle(i, val)
 
+        leaf = leaf.parent
         self.correctSize(leaf)
         while leaf.isRealNode():
             ballanceFactor = leaf.left.height - leaf.right.height
@@ -242,12 +243,18 @@ class AVLTreeList(object):
                 leaf = leaf.parent
             elif ballanceFactor == -2:
                 self.leftRotation(leaf)
+                if leaf == self.root:
+                    self.root = leaf.parent
+                break
             else:
                 self.rightRotaion(leaf)
+                if leaf == self.root:
+                    self.root = leaf.parent
+                break
 
     def insert_middle(self, i, val):
         tmp = self.get_node(i)  ##current at index i at the list
-        if tmp.left.isRealNode:
+        if tmp.left.isRealNode():
             tmp2 = self.predecessor(tmp)
             tmp2.right = AVLNode(val)
             tmp2.right.height = 0
@@ -261,18 +268,21 @@ class AVLTreeList(object):
             self.setVirtualSons(tmp.left)
             self.lengthOfTree += 1
             leaf = tmp.left
+            leaf.parent = tmp
         return leaf
 
     def insert_first(self, val):
         self.firstNode.left = AVLNode(val)
-        self.setVirtualSons(self.firstNode)
+        self.firstNode.left.parent = self.firstNode
+        self.setVirtualSons(self.firstNode.left)
         self.firstNode = self.firstNode.left
         self.lengthOfTree += 1
         self.firstNode.height = 0
 
     def insert_last(self, val):
         self.lastNode.right = AVLNode(val)
-        self.setVirtualSons(self.lastNode)
+        self.lastNode.right.parent = self.lastNode
+        self.setVirtualSons(self.lastNode.right)
         self.lastNode = self.lastNode.right
         self.lengthOfTree += 1
         self.lastNode.height = 0
@@ -282,8 +292,10 @@ class AVLTreeList(object):
         self.root.parent = self.virtualParent
         self.setVirtualSons(self.root)
         self.lengthOfTree += 1
-        self.root.height = 0
-        self.root.size += 1
+        ##self.root.height = 0
+        ##self.root.size += 1
+        self.lastNode = self.root
+        self.firstNode = self.root
 
     def rightRotaion(self, node):
         isLR = False
@@ -306,6 +318,7 @@ class AVLTreeList(object):
         node.left = node.left.right
         node.parent.right = node
         node.left.parent = node
+        node.right.parent = node
 
         node.height = max(node.left.height, node.right.height) + 1  ##fixing heights
         if isLR:
@@ -335,6 +348,7 @@ class AVLTreeList(object):
         node.right = node.right.left
         node.parent.left = node
         node.left.parent = node
+        node.right.parent = node
 
         node.height = max(node.left.height, node.right.height) + 1  ##fixing heights
         if isRL:
@@ -344,20 +358,20 @@ class AVLTreeList(object):
         node.size = node.left.size + node.right.size + 1
 
     def correctSize(self, node):
-        while node.isRealNode:
+        while node.isRealNode():
             node.size += 1
             node = node.parent
 
     def successor(self, node):  # returns the next object in the list
         if node.right.isRealNode():
             son = node.right
-            while son.left.isRealNode:
+            while son.left.isRealNode():
                 son = son.left
             return son
         else:
             father = node.parent
             current = node
-            while father.isRealNode and father.right == current:
+            while father.isRealNode() and father.right == current:
                 current = father
                 father = father.parent
             return father
@@ -365,13 +379,13 @@ class AVLTreeList(object):
     def predecessor(self, node):  # returns the previous object in the list
         if node.left.isRealNode():
             son = node.left
-            while son.right.isRealNode:
+            while son.right.isRealNode():
                 son = son.right
             return son
         else:
             father = node.parent
             current = node
-            while father.isRealNode and father.left == current:
+            while father.isRealNode() and father.left == current:
                 current = father
                 father = father.parent
             return father
@@ -379,7 +393,7 @@ class AVLTreeList(object):
     def get_node(self, i):
         def get_node_rec(root, j):
             if root.left.isRealNode():
-                left_subtree_size = root.left.rank + 1
+                left_subtree_size = root.left.size + 1
                 if left_subtree_size == j:
                     return root
 
@@ -432,7 +446,7 @@ class AVLTreeList(object):
 
     def listToArray(self):
         def listToArayRec(node, lst, index):
-            if not node.isRealNode:
+            if not node.isRealNode():
                 return
 
             listToArayRec(node.left, lst, index)
@@ -503,8 +517,18 @@ class AVLTreeList(object):
         return self.root
 
 
+##function for testing and debbug
+    def check(self):
+        tree = self
+        for i in range(tree.lengthOfTree):
+            node = tree.get_node(i)
+            if node.left.parent != node:
+                print(node.value + "left son prob")
+            if node.right.parent != node:
+                print(node.value + "right son prob")
+
 ###tester
-def printree(t, bykey=True):
+def printree(t, bykey=False):
     """Print a textual representation of t
     bykey=True: show keys instead of values"""
     # for row in trepr(t, bykey):
@@ -518,7 +542,10 @@ def trepr(t, bykey=False):
     if t == None:
         return ["#"]
 
-    thistr = str(t.key) if bykey else str(t.val)
+    if t.height == -1:
+        return ["#"]
+
+    thistr = str(t.key) if bykey else str(t.value)
 
     return conc(trepr(t.left, bykey), thistr, trepr(t.right, bykey))
 
@@ -575,3 +602,26 @@ def rightspace(row):
     while row[i] == " ":
         i += 1
     return i
+
+
+
+tree = AVLTreeList()
+tree.insert(0, "1")
+tree.insert(0, "4")
+tree.insert(0, "2")
+tree.insert(3, "6")
+tree.insert(0, "7")
+tree.insert(0, "8")
+tree.insert(0, "10")
+tree.insert(0, "11")
+tree.insert(8, "12")
+tree.insert(9, "15")
+tree.insert(10, "18")
+tree.insert(11, "20")
+tree.insert(12, "22")
+tree.insert(8, "24")
+tree.insert(8, "99")
+print(printree(tree.root))
+
+
+
