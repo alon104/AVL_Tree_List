@@ -233,7 +233,7 @@ class AVLTreeList(object):
             leaf = self.insert_middle(i, val)
 
         leaf = leaf.parent
-        self.correctSize(leaf)
+        self.correctSizeInsert(leaf)
         while leaf.isRealNode():
             ballanceFactor = leaf.left.height - leaf.right.height
             if -2 < ballanceFactor < 2 and leaf.height == max(leaf.right.height, leaf.left.height) + 1:
@@ -357,7 +357,7 @@ class AVLTreeList(object):
         node.parent.size = node.size  ##fixing sizes
         node.size = node.left.size + node.right.size + 1
 
-    def correctSize(self, node):  ## time complexity: O(log(n)) worst case
+    def correctSizeInsert(self, node):  ## time complexity: O(log(n)) worst case
         while node.isRealNode():
             node.size += 1
             node = node.parent
