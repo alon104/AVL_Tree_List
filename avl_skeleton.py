@@ -186,7 +186,7 @@ class AVLTreeList(object):
     @returns: the the value of the i'th item in the list
     """
 
-    def retrieve(self, i):
+    def retrieve(self, i):  ## time complexity: O(log(n)) worst case
         def retrieve_rec(root, j):
             if root.left.isRealNode():
                 left_subtree_size = root.left.size + 1
@@ -217,7 +217,7 @@ class AVLTreeList(object):
     @returns: the number of rebalancing operation due to AVL rebalancing
     """
 
-    def insert(self, i, val):
+    def insert(self, i, val):  ## time complexity: O(log(n)) worst case
         if i == 0 and self.lengthOfTree != 0:
             self.insert_first(val)
             leaf = self.firstNode
@@ -252,7 +252,7 @@ class AVLTreeList(object):
                     self.root = leaf.parent
                 break
 
-    def insert_middle(self, i, val):
+    def insert_middle(self, i, val): ## time complexity: O(log(n)) worst case - sub-function of insert()
         tmp = self.get_node(i)  ##current at index i at the list
         if tmp.left.isRealNode():
             tmp2 = self.predecessor(tmp)
@@ -271,7 +271,7 @@ class AVLTreeList(object):
             leaf.parent = tmp
         return leaf
 
-    def insert_first(self, val):
+    def insert_first(self, val):  ## time complexity: O(log(n)) worst case - sub-function of insert()
         self.firstNode.left = AVLNode(val)
         self.firstNode.left.parent = self.firstNode
         self.setVirtualSons(self.firstNode.left)
@@ -279,7 +279,7 @@ class AVLTreeList(object):
         self.lengthOfTree += 1
         self.firstNode.height = 0
 
-    def insert_last(self, val):
+    def insert_last(self, val):  ## time complexity: O(log(n)) worst case - sub-function of insert()
         self.lastNode.right = AVLNode(val)
         self.lastNode.right.parent = self.lastNode
         self.setVirtualSons(self.lastNode.right)
@@ -297,7 +297,7 @@ class AVLTreeList(object):
         self.lastNode = self.root
         self.firstNode = self.root
 
-    def rightRotaion(self, node):
+    def rightRotaion(self, node):  ## time complexity: O(1) worst case
         isLR = False
         if node.left.left.height - node.left.right.height == -1:
             isLR = True
@@ -327,7 +327,7 @@ class AVLTreeList(object):
         node.parent.size = node.size  ##fixing sizes
         node.size = node.left.size + node.right.size + 1
 
-    def leftRotation(self, node):
+    def leftRotation(self, node):  ## time complexity: O(1) worst case
         isRL = False
         if node.right.left.height - node.right.right.height == 1:
             isRL = True
@@ -357,12 +357,12 @@ class AVLTreeList(object):
         node.parent.size = node.size  ##fixing sizes
         node.size = node.left.size + node.right.size + 1
 
-    def correctSize(self, node):
+    def correctSize(self, node):  ## time complexity: O(log(n)) worst case
         while node.isRealNode():
             node.size += 1
             node = node.parent
 
-    def successor(self, node):  # returns the next object in the list
+    def successor(self, node):  ## time complexity: O(log(n)) worst case
         if node.right.isRealNode():
             son = node.right
             while son.left.isRealNode():
@@ -376,7 +376,7 @@ class AVLTreeList(object):
                 father = father.parent
             return father
 
-    def predecessor(self, node):  # returns the previous object in the list
+    def predecessor(self, node):  ## time complexity: O(log(n)) worst case
         if node.left.isRealNode():
             son = node.left
             while son.right.isRealNode():
@@ -390,7 +390,7 @@ class AVLTreeList(object):
                 father = father.parent
             return father
 
-    def get_node(self, i):
+    def get_node(self, i):  ## time complexity: O(log(n)) worst case
         def get_node_rec(root, j):
             if root.left.isRealNode():
                 left_subtree_size = root.left.size + 1
@@ -417,7 +417,7 @@ class AVLTreeList(object):
     @returns: the number of rebalancing operation due to AVL rebalancing
     """
 
-    def delete(self, i):
+    def delete(self, i):  ## time complexity: O(log(n)) worst case
         return -1
 
     """returns the value of the first item in the list
@@ -444,7 +444,7 @@ class AVLTreeList(object):
     @returns: a list of strings representing the data structure
     """
 
-    def listToArray(self):
+    def listToArray(self):  ## time complexity O(n) at all cases
         def listToArayRec(node, lst, index):
             if not node.isRealNode():
                 return
@@ -500,7 +500,7 @@ class AVLTreeList(object):
     @returns: the first index that contains val, -1 if not found.
     """
 
-    def search(self, val):
+    def search(self, val): ## time complexity O(n) at all cases
         avl_list = self.listToArray()
         for i in range(self.lengthOfTree):
             if avl_list[i] == val:
@@ -515,6 +515,8 @@ class AVLTreeList(object):
 
     def getRoot(self):
         return self.root
+
+
 
 
 ##function for testing and debbug
