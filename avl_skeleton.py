@@ -4,7 +4,85 @@
 # id2      - 313247900
 # name2    - omri ravona
 
+###tester
+import random
+import string
 
+
+def printree(t, bykey=False):
+    """Print a textual representation of t
+    bykey=True: show keys instead of values"""
+     #for row in trepr(t, bykey):
+     #       print(row)
+    return trepr(t, bykey)
+
+
+def trepr(t, bykey=False):
+    """Return a list of textual representations of the levels in t
+    bykey=True: show keys instead of values"""
+    if t == None:
+        return ["#"]
+
+    if t.height == -1:
+        return ["#"]
+
+    thistr = str(t.key) if bykey else str(t.value)
+
+    return conc(trepr(t.left, bykey), thistr, trepr(t.right, bykey))
+
+
+def conc(left, root, right):
+    """Return a concatenation of textual represantations of
+    a root node, its left node, and its right node
+    root is a string, and left and right are lists of strings"""
+
+    lwid = len(left[-1])
+    rwid = len(right[-1])
+    rootwid = len(root)
+
+    result = [(lwid + 1) * " " + root + (rwid + 1) * " "]
+
+    ls = leftspace(left[0])
+    rs = rightspace(right[0])
+    result.append(ls * " " + (lwid - ls) * "_" + "/" + rootwid * " " + "\\" + rs * "_" + (rwid - rs) * " ")
+
+    for i in range(max(len(left), len(right))):
+        row = ""
+        if i < len(left):
+            row += left[i]
+        else:
+            row += lwid * " "
+
+        row += (rootwid + 2) * " "
+
+        if i < len(right):
+            row += right[i]
+        else:
+            row += rwid * " "
+
+        result.append(row)
+
+    return result
+
+
+def leftspace(row):
+    """helper for conc"""
+    # row is the first row of a left node
+    # returns the index of where the second whitespace starts
+    i = len(row) - 1
+    while row[i] == " ":
+        i -= 1
+    return i + 1
+
+
+def rightspace(row):
+    """helper for conc"""
+    # row is the first row of a right node
+    # returns the index of where the first whitespace ends
+    i = 0
+    while row[i] == " ":
+        i += 1
+    return i
 """A class represnting a node in an AVL tree"""
 
 
@@ -23,6 +101,9 @@ class AVLNode(object):
         self.parent = None
         self.height = -1
         self.size = 0  # this supposed to be maintain in the tree class
+
+    def __repr__(self):
+        return "(" + str(self.height) + ":" + str(self.value) + ")"
 
     """returns the left child
     @rtype: AVLNode
@@ -156,6 +237,12 @@ class AVLTreeList(object):
         self.lastNode = None
         self.lengthOfTree = 0
         self.virtualParent = AVLNode(None)
+
+    def __repr__(self):  # no need to understand the implementation of this one
+        out = ""
+        for row in printree(self.root):  # need printree.py file
+            out = out + row + "\n"
+        return out
 
     """returns whether the list is empty
 
@@ -292,8 +379,6 @@ class AVLTreeList(object):
         self.root.parent = self.virtualParent
         self.setVirtualSons(self.root)
         self.lengthOfTree += 1
-        ##self.root.height = 0
-        ##self.root.size += 1
         self.lastNode = self.root
         self.firstNode = self.root
 
@@ -418,7 +503,122 @@ class AVLTreeList(object):
     """
 
     def delete(self, i):  ## time complexity: O(log(n)) worst case
-        return -1
+        if i < 0 or i >= self.lengthOfTree:
+            return -1
+        wanted = self.get_node(i)
+        if wanted.right.isRealNode() and wanted.left.isRealNode():
+            node = self.deleteTwoSons(wanted)
+        elif wanted.right.isRealNode() or wanted.left.isRealNode():
+            node = self.deleteOneSon(wanted)
+        else:
+            node = self.deleteLeaf(wanted)
+        self.lengthOfTree -= 1
+        self.correctSizeDelete(node)
+
+        while node.isRealNode():
+            ballanceFactor = node.left.height - node.right.height
+            if -2 < ballanceFactor < 2 and node.height == max(node.right.height, node.left.height) + 1:
+                break
+            elif -2 < ballanceFactor < 2:
+                node.height = max(node.right.height, node.left.height) + 1
+                node = node.parent
+            elif ballanceFactor == -2:
+                self.leftRotation(node)
+                if node == self.root:
+                    self.root = node.parent
+                    break
+            else:
+                self.rightRotaion(node)
+                if node == self.root:
+                    self.root = node.parent
+                    break
+
+
+
+    def deleteLeaf(self, node):
+        if self.root == node:
+            self.root = None
+            self.firstNode = None
+            self.lastNode = None
+        elif self.firstNode == node:
+            self.firstNode = node.parent
+        elif self.lastNode == node:
+            self.lastNode = node.parent
+        if node.parent.right == node:
+            father = node.parent
+            node.parent = None
+            father.right = node.right
+            node.right.parent = father
+            node.right = None
+            node.left.parent = None
+            node.left = None
+        else:
+            father = node.parent
+            node.parent = None
+            father.left = node.left
+            node.left.parent = father
+            node.left = None
+            node.right.parent = None
+            node.right = None
+        return father
+
+    def deleteOneSon(self, node):
+        if self.root == node:
+            if node.left.isRealNode():
+                self.root = node.left
+                self.lastNode = node.left
+            else:
+                self.root = node.right
+                self.firstNode = node.right
+        elif self.firstNode == node:
+            self.firstNode = node.right
+        elif self.lastNode == node:
+            self.lastNode = node.left
+        if node.left.isRealNode():
+            son = node.left
+        else: son = node.right
+        if node.parent.left == node:
+            node.parent.left = son
+            son.parent = node.parent
+        else:
+            node.parent.right = son
+            son.parent = node.parent
+        node.parent = None
+        node.right = None
+        node.left = None
+        return son.parent
+
+    def deleteTwoSons(self, node):
+        succ = self.successor(node)
+        if self.root == node:
+            isRoot = True
+        father = succ.parent
+        if succ.right.isRealNode() or succ.left.isRealNode():
+            self.deleteOneSon(succ)
+        else:
+            self.deleteLeaf(succ)
+        succ.parent = node.parent
+        node.parent = None
+        if succ.parent.left == node:
+            succ.parent.left = succ
+        else:
+            succ.parent.right = succ
+        succ.left = node.left
+        node.left = None
+        succ.left.parent = succ
+        succ.right = node.right
+        node.right = None
+        succ.right.parent = succ
+        succ.size = node.size
+        succ.height = node.height
+        if isRoot:
+            self.root = succ
+        return father
+
+    def correctSizeDelete(self, node):  ## time complexity: O(log(n)) worst case
+        while node.isRealNode():
+            node.size -= 1
+            node = node.parent
 
     """returns the value of the first item in the list
 
@@ -516,9 +716,6 @@ class AVLTreeList(object):
     def getRoot(self):
         return self.root
 
-
-
-
 ##function for testing and debbug
     def check(self):
         tree = self
@@ -529,101 +726,19 @@ class AVLTreeList(object):
             if node.right.parent != node:
                 print(node.value + "right son prob")
 
-###tester
-def printree(t, bykey=False):
-    """Print a textual representation of t
-    bykey=True: show keys instead of values"""
-    # for row in trepr(t, bykey):
-    #        print(row)
-    return trepr(t, bykey)
-
-
-def trepr(t, bykey=False):
-    """Return a list of textual representations of the levels in t
-    bykey=True: show keys instead of values"""
-    if t == None:
-        return ["#"]
-
-    if t.height == -1:
-        return ["#"]
-
-    thistr = str(t.key) if bykey else str(t.value)
-
-    return conc(trepr(t.left, bykey), thistr, trepr(t.right, bykey))
-
-
-def conc(left, root, right):
-    """Return a concatenation of textual represantations of
-    a root node, its left node, and its right node
-    root is a string, and left and right are lists of strings"""
-
-    lwid = len(left[-1])
-    rwid = len(right[-1])
-    rootwid = len(root)
-
-    result = [(lwid + 1) * " " + root + (rwid + 1) * " "]
-
-    ls = leftspace(left[0])
-    rs = rightspace(right[0])
-    result.append(ls * " " + (lwid - ls) * "_" + "/" + rootwid * " " + "\\" + rs * "_" + (rwid - rs) * " ")
-
-    for i in range(max(len(left), len(right))):
-        row = ""
-        if i < len(left):
-            row += left[i]
-        else:
-            row += lwid * " "
-
-        row += (rootwid + 2) * " "
-
-        if i < len(right):
-            row += right[i]
-        else:
-            row += rwid * " "
-
-        result.append(row)
-
-    return result
-
-
-def leftspace(row):
-    """helper for conc"""
-    # row is the first row of a left node
-    # returns the index of where the second whitespace starts
-    i = len(row) - 1
-    while row[i] == " ":
-        i -= 1
-    return i + 1
-
-
-def rightspace(row):
-    """helper for conc"""
-    # row is the first row of a right node
-    # returns the index of where the first whitespace ends
-    i = 0
-    while row[i] == " ":
-        i += 1
-    return i
-
-
-
-tree = AVLTreeList()
-tree.insert(0, "1")
-tree.insert(0, "4")
-tree.insert(0, "2")
-tree.insert(3, "6")
-tree.insert(0, "7")
-tree.insert(0, "8")
-tree.insert(0, "10")
-tree.insert(0, "11")
-tree.insert(8, "12")
-tree.insert(9, "15")
-tree.insert(10, "18")
-tree.insert(11, "20")
-tree.insert(12, "22")
-tree.insert(8, "24")
-tree.insert(8, "99")
-print(printree(tree.root))
-
-
-
+# tree = AVLTreeList()
+# tree.insert(0,1)
+# print(tree)
+# tree.delete(0)
+# tree.insert(0,3)
+# tree.insert(1,4)
+# tree.delete(0)
+# tree.insert(0,5)
+# tree.delete(1)
+# print(tree)
+tree2 = AVLTreeList()
+for i in range(10):
+    j = random.randint(0,i)
+    str1 = "".join(random.choice(string.ascii_lowercase))
+    tree2.insert(j, str1)
+print(tree2)
