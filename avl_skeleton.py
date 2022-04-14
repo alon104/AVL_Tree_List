@@ -307,6 +307,7 @@ class AVLTreeList(object):
     """
 
     def insert(self, i, val):  ## time complexity: O(log(n)) worst case
+        cnt = 0
         if i == 0 and self.lengthOfTree != 0:
             self.insert_first(val)
             leaf = self.firstNode
@@ -315,9 +316,9 @@ class AVLTreeList(object):
             leaf = self.lastNode
         elif i == 0 and self.lengthOfTree == 0:
             self.insertRoot(val)
-            return
+            return 0
         elif i < 0 or i > self.lengthOfTree:
-            return
+            return 0
         else:
             leaf = self.insert_middle(i, val)
 
@@ -328,18 +329,26 @@ class AVLTreeList(object):
             if -2 < ballanceFactor < 2 and leaf.height == max(leaf.right.height, leaf.left.height) + 1:
                 break
             elif -2 < ballanceFactor < 2:
+                cnt += 1
                 leaf.height = max(leaf.right.height, leaf.left.height) + 1
                 leaf = leaf.parent
             elif ballanceFactor == -2:
-                self.leftRotation(leaf)
+                isRL = self.leftRotation(leaf)
+                if isRL:
+                    cnt += 1
+                cnt += 1
                 if leaf == self.root:
                     self.root = leaf.parent
                 break
             else:
-                self.rightRotaion(leaf)
+                isLR = self.rightRotaion(leaf)
+                if isLR:
+                    cnt += 1
+                cnt += 1
                 if leaf == self.root:
                     self.root = leaf.parent
                 break
+        return cnt
 
     def insert_middle(self, i, val): ## time complexity: O(log(n)) worst case - sub-function of insert()
         tmp = self.get_node(i)  ##current at index i at the list
@@ -414,6 +423,7 @@ class AVLTreeList(object):
         node.parent.height = max(node.parent.left.height, node.height) + 1
         node.parent.size = node.size  ##fixing sizes
         node.size = node.left.size + node.right.size + 1
+        return isLR
 
     def leftRotation(self, node):  ## time complexity: O(1) worst case
         isRL = False
@@ -445,6 +455,7 @@ class AVLTreeList(object):
         node.parent.height = max(node.parent.left.height, node.height) + 1
         node.parent.size = node.size  ##fixing sizes
         node.size = node.left.size + node.right.size + 1
+        return isRL
 
     def correctSizeInsert(self, node):  ## time complexity: O(log(n)) worst case
         while node.isRealNode():
@@ -507,6 +518,7 @@ class AVLTreeList(object):
     """
 
     def delete(self, i):  ## time complexity: O(log(n)) worst case
+        cnt = 0
         if i < 0 or i >= self.lengthOfTree:
             return -1
         wanted = self.get_node(i)
@@ -524,22 +536,28 @@ class AVLTreeList(object):
             if -2 < ballanceFactor < 2 and node.height == max(node.right.height, node.left.height) + 1:
                 node = node.parent
             elif -2 < ballanceFactor < 2:
+                cnt += 1
                 node.height = max(node.right.height, node.left.height) + 1
                 node = node.parent
             elif ballanceFactor == -2:
-                self.leftRotation(node)
+                isRL = self.leftRotation(node)
+                if isRL:
+                    cnt += 1
+                cnt += 1
                 if node == self.root:
                     self.root = node.parent
                     break
                 node = node.parent
             else:
-                self.rightRotaion(node)
+                isLR = self.rightRotaion(node)
+                if isLR:
+                    cnt += 1
+                cnt += 1
                 if node == self.root:
                     self.root = node.parent
                     break
                 node = node.parent
-
-
+        return cnt
 
     def deleteLeaf(self, node):
         if self.root == node:
@@ -701,7 +719,162 @@ class AVLTreeList(object):
     """
 
     def concat(self, lst):
-        return None
+        if self.lengthOfTree == 0 and lst.lengthOfTree == 0:
+            return 0
+        elif self.lengthOfTree == 0:
+            self.switchLstSelf(lst)
+            return self.root.height
+        elif lst.lengthOfTree == 0:
+            return self.root.height
+        elif self.lengthOfTree == 1:
+            heightDiff = lst.root.height - self.root.height
+            node = self.concat1ToOther(lst)
+        elif lst.lengthOfTree == 1:
+            heightDiff = self.root.height - lst.root.height
+            node = self.concatSelfTo1(lst)
+        elif self.root.height <= lst.root.height:
+            heightDiff = lst.root.height - self.root.height
+            tmpNode = self.lastNode
+            self.delete(self.lengthOfTree - 1)
+            node = self.prepForConcatBigTosmall(lst, tmpNode)
+        else:
+            heightDiff = self.root.height - lst.root.height
+            tmpNode = lst.firstNode
+            lst.delete(0)
+            node = self.prepForConcatsmallToBig(lst, tmpNode)
+        self.fixingAfterConcat(node)
+        return heightDiff
+
+    def concat1ToOther(self, lst):
+        lst.firstNode.left = self.root
+        self.root.parent = lst.firstNode
+        lst.firstNode = lst.firstNode.left
+        self.switchLstSelf(lst)
+        self.lengthOfTree += 1
+        return self.firstNode.parent
+
+    def concatSelfTo1(self, lst):
+        self.lastNode.right = lst.root
+        lst.root.parent = self.lastNode
+        self.lastNode = self.lastNode.right
+        self.lengthOfTree += 1
+        lst.root = None
+        lst.lengthOfTree = 0
+        lst.firstNode = None
+        lst.lastNode = None
+        lst.virtualParent = None
+        return self.lastNode.parent
+
+
+    def prepForConcatBigTosmall(self, lst, tmpNode):
+        node = lst.root
+        while node.height > self.root.height:
+            node = node.left
+        if node == lst.root:
+            self.rootToSelf(lst, tmpNode)
+            node = tmpNode
+        else:
+            father = node.parent
+            father.left = tmpNode
+            tmpNode.parent = father
+            tmpNode.right = node
+            node.parent = tmpNode
+            tmpNode.left = self.root
+            self.garbage(lst, tmpNode)
+            node = father
+        return node
+
+
+    def rootToSelf (self, lst, tmpNode):
+        tmpNode.left = self.root
+        self.root.parent = tmpNode
+        tmpNode.right = lst.root
+        lst.root.parent = tmpNode
+        tmpNode.parent = self.virtualParent
+        self.virtualParent.left = tmpNode
+        self.virtualParent.right = tmpNode
+        tmpNode.size = tmpNode.left.size + tmpNode.right.size + 1
+        tmpNode.height = max(tmpNode.left.height, tmpNode.right.height) + 1
+        self.root = tmpNode
+        self.lastNode = lst.lastNode
+        self.lengthOfTree = tmpNode.size
+        lst.root = None
+        lst.lengthOfTree = 0
+        lst.firstNode = None
+        lst.lastNode = None
+        lst.virtualParent = None
+
+    def prepForConcatsmallToBig(self, lst, tmpNode):
+        node = self.root
+        while node.height > lst.root.height:
+            node = node.right
+        if node == self.root:
+            self.rootToSelf(lst, tmpNode)
+            node = tmpNode
+        else:
+            father = node.parent
+            father.right = tmpNode
+            tmpNode.parent = father
+            tmpNode.left = node
+            node.parent = tmpNode
+            tmpNode.right = lst.root
+            lst.root.parent = tmpNode
+            self.garbage(lst, tmpNode)
+            node = father
+        return node
+
+
+
+    def fixingAfterConcat(self, node):
+        while node.isRealNode():
+            ballanceFactor = node.left.height - node.right.height
+            if -2 < ballanceFactor < 2 and node.height == max(node.right.height, node.left.height) + 1:
+                node = node.parent
+            elif -2 < ballanceFactor < 2:
+                node.height = max(node.right.height, node.left.height) + 1
+                node = node.parent
+            elif ballanceFactor == -2:
+                self.leftRotation(node)
+                if node == self.root:
+                    self.root = node.parent
+                    break
+                node = node.parent
+            else:
+                self.rightRotaion(node)
+                if node == self.root:
+                    self.root = node.parent
+                    break
+                node = node.parent
+
+    def garbage(self, lst, tmpNode):
+        self.root.parent = tmpNode
+        self.lengthOfTree = lst.lengthOfTree + self.lengthOfTree + 1
+        self.root = lst.root
+        self.lastNode = lst.lastNode
+        self.root.parent = self.virtualParent
+        self.virtualParent.left = self.root
+        self.virtualParent.right = self.root
+        lst.root = None
+        lst.lengthOfTree = 0
+        lst.firstNode = None
+        lst.lastNode = None
+        lst.virtualParent = None
+        tmpNode.size = tmpNode.left.size + tmpNode.right.size + 1
+        tmpNode.height = max(tmpNode.left.height, tmpNode.right.height) + 1
+
+    def switchLstSelf(self,lst):
+        self.lastNode = lst.lastNode
+        self.firstNode = lst.firstNode
+        self.root = lst.root
+        self.lengthOfTree = lst.lengthOfTree
+        self.root.parent = self.virtualParent
+        self.virtualParent = lst.virtualParent
+        lst.root = None
+        lst.lengthOfTree = 0
+        lst.firstNode = None
+        lst.lastNode = None
+        lst.virtualParent = None
+
 
     """searches for a *value* in the list
 
@@ -737,30 +910,18 @@ class AVLTreeList(object):
             if node.right.parent != node:
                 print(node.value + "right son prob")
 
-tree = AVLTreeList()
-tree.insert(0, "5")
-tree.insert(0,"2")
-tree.insert(2,"10")
-tree.insert(0,"1")
-tree.insert(2,"3")
-tree.insert(4,"8")
-tree.insert(6,"11")
-tree.insert(3, "4")
-tree.insert(5, "6")
-tree.insert(7, "9")
-tree.insert(10, "12")
-tree.insert(6, "7")
-tree.delete(0)
-print(tree)
-# for i in range(10):
-#     tree.delete(0)
-#     print(tree)
-# tree2 = AVLTreeList()
-# for i in range(500000):
-#     j = random.randint(0,i)
-#     str1 = "".join(random.choice(string.ascii_lowercase))
-#     tree2.insert(j, str1)
-# # print(tree2)
-# for i in range(300000):
-#     # j = random.randint(0, 500-i)
-#     tree2.delete(0)
+
+tree2 = AVLTreeList()
+for i in range(300):
+    j = random.randint(0,i)
+    str1 = "".join(random.choice(string.ascii_lowercase))
+    tree2.insert(j, str1)
+print(tree2)
+tree3 = AVLTreeList()
+for i in range(7000):
+    j = random.randint(0,i)
+    str1 = "".join(random.choice(string.ascii_lowercase))
+    tree3.insert(j, str1)
+print(tree3)
+tree2.concat(tree3)
+print(tree2)
