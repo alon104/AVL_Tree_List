@@ -408,6 +408,7 @@ class AVLTreeList(object):
         node.height = max(node.left.height, node.right.height) + 1  ##fixing heights
         if isLR:
             node.parent.left.height = max(node.parent.left.left.height, node.parent.left.right.height) + 1
+            tmpLeft.size = tmpLeft.left.size + tmpLeft.right.size + 1  ####
         node.parent.height = max(node.parent.left.height, node.height) + 1
         node.parent.size = node.size  ##fixing sizes
         node.size = node.left.size + node.right.size + 1
@@ -438,6 +439,7 @@ class AVLTreeList(object):
         node.height = max(node.left.height, node.right.height) + 1  ##fixing heights
         if isRL:
             node.parent.right.height = max(node.parent.right.left.height, node.parent.right.right.height) + 1
+            tmpright.size = tmpright.left.size + tmpright.right.size + 1  ####
         node.parent.height = max(node.parent.left.height, node.height) + 1
         node.parent.size = node.size  ##fixing sizes
         node.size = node.left.size + node.right.size + 1
@@ -518,7 +520,7 @@ class AVLTreeList(object):
         while node.isRealNode():
             ballanceFactor = node.left.height - node.right.height
             if -2 < ballanceFactor < 2 and node.height == max(node.right.height, node.left.height) + 1:
-                break
+                node = node.parent
             elif -2 < ballanceFactor < 2:
                 node.height = max(node.right.height, node.left.height) + 1
                 node = node.parent
@@ -527,11 +529,13 @@ class AVLTreeList(object):
                 if node == self.root:
                     self.root = node.parent
                     break
+                node = node.parent
             else:
                 self.rightRotaion(node)
                 if node == self.root:
                     self.root = node.parent
                     break
+                node = node.parent
 
 
 
@@ -589,10 +593,14 @@ class AVLTreeList(object):
         return son.parent
 
     def deleteTwoSons(self, node):
+        isRoot = False
         succ = self.successor(node)
         if self.root == node:
             isRoot = True
-        father = succ.parent
+        if succ.parent == node:
+            father = succ
+        else:
+            father = succ.parent
         if succ.right.isRealNode() or succ.left.isRealNode():
             self.deleteOneSon(succ)
         else:
@@ -627,7 +635,7 @@ class AVLTreeList(object):
     """
 
     def first(self):
-        return self.first
+        return self.firstNode.value
 
     """returns the value of the last item in the list
 
@@ -636,7 +644,7 @@ class AVLTreeList(object):
     """
 
     def last(self):
-        return self.last
+        return self.lastNode.value
 
     """returns an array representing list 
 
@@ -648,15 +656,16 @@ class AVLTreeList(object):
         def listToArayRec(node, lst, index):
             if not node.isRealNode():
                 return
-
             listToArayRec(node.left, lst, index)
-            lst[index] = node.value
+            lst.append(node.value)
             index += 1
             listToArayRec(node.right, lst, index)
             return lst
 
         lst = []
         i = 0
+        if self.lengthOfTree == 0:
+            return lst
         return listToArayRec(self.root, lst, i)
 
     """returns the size of the list 
@@ -726,19 +735,30 @@ class AVLTreeList(object):
             if node.right.parent != node:
                 print(node.value + "right son prob")
 
-# tree = AVLTreeList()
-# tree.insert(0,1)
-# print(tree)
-# tree.delete(0)
-# tree.insert(0,3)
-# tree.insert(1,4)
-# tree.delete(0)
-# tree.insert(0,5)
-# tree.delete(1)
-# print(tree)
-tree2 = AVLTreeList()
-for i in range(10):
-    j = random.randint(0,i)
-    str1 = "".join(random.choice(string.ascii_lowercase))
-    tree2.insert(j, str1)
-print(tree2)
+tree = AVLTreeList()
+tree.insert(0, "5")
+tree.insert(0,"2")
+tree.insert(2,"10")
+tree.insert(0,"1")
+tree.insert(2,"3")
+tree.insert(4,"8")
+tree.insert(6,"11")
+tree.insert(3, "4")
+tree.insert(5, "6")
+tree.insert(7, "9")
+tree.insert(10, "12")
+tree.insert(6, "7")
+tree.delete(0)
+print(tree)
+# for i in range(10):
+#     tree.delete(0)
+#     print(tree)
+# tree2 = AVLTreeList()
+# for i in range(500000):
+#     j = random.randint(0,i)
+#     str1 = "".join(random.choice(string.ascii_lowercase))
+#     tree2.insert(j, str1)
+# # print(tree2)
+# for i in range(300000):
+#     # j = random.randint(0, 500-i)
+#     tree2.delete(0)
