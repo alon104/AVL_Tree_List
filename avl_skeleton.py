@@ -133,7 +133,9 @@ class AVLNode(object):
     """
 
     def getParent(self):
-        return self.parent
+        if self.parent.isRealNode():
+            return self.parent
+        return None
 
     """return the value
 
@@ -675,7 +677,7 @@ class AVLTreeList(object):
     """
 
     def length(self):
-        return self.length
+        return self.lengthOfTree
 
     """splits the list at the i'th index
 
