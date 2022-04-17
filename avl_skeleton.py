@@ -722,51 +722,52 @@ class AVLTreeList(object):
         if self.lengthOfTree == 0 and lst.lengthOfTree == 0:
             return 0
         elif self.lengthOfTree == 0:
-            self.switchLstSelf(lst)
+            self.switchLstSelfWithLst(lst)
             return self.root.height
         elif lst.lengthOfTree == 0:
             return self.root.height
         elif self.lengthOfTree == 1:
             heightDiff = lst.root.height - self.root.height
-            node = self.concat1ToOther(lst)
-        elif lst.lengthOfTree == 1:
-            heightDiff = self.root.height - lst.root.height
-            node = self.concatSelfTo1(lst)
+            TempNode = self.root
+            self.delete(0)
+            self.join(lst, TempNode)
+        # elif lst.lengthOfTree == 1:
+        #     heightDiff = self.root.height - lst.root.height
+        #     node = self.concatSelfTo1(lst)
         elif self.root.height <= lst.root.height:
             heightDiff = lst.root.height - self.root.height
-            tmpNode = self.lastNode
+            TempNode = self.lastNode
             self.delete(self.lengthOfTree - 1)
-            node = self.prepForConcatBigTosmall(lst, tmpNode)
+            self.join(lst, TempNode)
         else:
             heightDiff = self.root.height - lst.root.height
-            tmpNode = lst.firstNode
-            lst.delete(0)
-            node = self.prepForConcatsmallToBig(lst, tmpNode)
-        self.fixingAfterConcat(node)
+            TempNode = self.lastNode
+            self.delete(self.lengthOfTree - 1)
+            self.join(lst, TempNode)
         return heightDiff
 
-    def concat1ToOther(self, lst):
-        lst.firstNode.left = self.root
-        self.root.parent = lst.firstNode
-        lst.firstNode = lst.firstNode.left
-        self.switchLstSelf(lst)
-        self.lengthOfTree += 1
-        return self.firstNode.parent
+    def join(self, lst, TempNode):
+        ##joining a lst to self == empty
+        if self.lengthOfTree == 0:
+            self.joinWithEmpty(lst, TempNode)
+            self.RotateAfterJoin(self.firstNode.parent)################
+        ##general case
+        elif self.lengthOfTree <= lst.lengthOfTree:
+            fixFromHere = self.prepForJoinBigTosmall(lst, TempNode)
+            self.RotateAfterJoin(fixFromHere)
+        elif self.lengthOfTree > lst.lengthOfTree:
+            fixFromHere = self.prepForJoinsmallToBig(lst, TempNode)
+            self.RotateAfterJoin(fixFromHere)
 
-    def concatSelfTo1(self, lst):
-        self.lastNode.right = lst.root
-        lst.root.parent = self.lastNode
-        self.lastNode = self.lastNode.right
-        self.lengthOfTree += 1
-        lst.root = None
-        lst.lengthOfTree = 0
-        lst.firstNode = None
-        lst.lastNode = None
-        lst.virtualParent = None
-        return self.lastNode.parent
+    def joinWithEmpty(self, lst, TempNode):
+            lst.firstNode.left = TempNode
+            TempNode.parent = lst.firstNode
+            lst.firstNode = TempNode
+            self.switchLstSelfWithLst(lst)
+            self.lengthOfTree += 1
+            self.RotateAfterJoin(self.firstNode)
 
-
-    def prepForConcatBigTosmall(self, lst, tmpNode):
+    def prepForJoinBigTosmall(self, lst, tmpNode):
         node = lst.root
         while node.height > self.root.height:
             node = node.left
@@ -780,7 +781,7 @@ class AVLTreeList(object):
             tmpNode.right = node
             node.parent = tmpNode
             tmpNode.left = self.root
-            self.garbage(lst, tmpNode)
+            self.fixingPointers(lst, tmpNode)
             node = father
         return node
 
@@ -804,7 +805,7 @@ class AVLTreeList(object):
         lst.lastNode = None
         lst.virtualParent = None
 
-    def prepForConcatsmallToBig(self, lst, tmpNode):
+    def prepForJoinsmallToBig(self, lst, tmpNode):
         node = self.root
         while node.height > lst.root.height:
             node = node.right
@@ -819,13 +820,11 @@ class AVLTreeList(object):
             node.parent = tmpNode
             tmpNode.right = lst.root
             lst.root.parent = tmpNode
-            self.garbage(lst, tmpNode)
+            self.fixingPointers(lst, tmpNode)
             node = father
         return node
 
-
-
-    def fixingAfterConcat(self, node):
+    def RotateAfterJoin(self, node):
         while node.isRealNode():
             ballanceFactor = node.left.height - node.right.height
             if -2 < ballanceFactor < 2 and node.height == max(node.right.height, node.left.height) + 1:
@@ -846,7 +845,7 @@ class AVLTreeList(object):
                     break
                 node = node.parent
 
-    def garbage(self, lst, tmpNode):
+    def fixingPointers(self, lst, tmpNode):
         self.root.parent = tmpNode
         self.lengthOfTree = lst.lengthOfTree + self.lengthOfTree + 1
         self.root = lst.root
@@ -862,7 +861,7 @@ class AVLTreeList(object):
         tmpNode.size = tmpNode.left.size + tmpNode.right.size + 1
         tmpNode.height = max(tmpNode.left.height, tmpNode.right.height) + 1
 
-    def switchLstSelf(self,lst):
+    def switchLstSelfWithLst(self,lst):
         self.lastNode = lst.lastNode
         self.firstNode = lst.firstNode
         self.root = lst.root
@@ -916,12 +915,12 @@ for i in range(300):
     j = random.randint(0,i)
     str1 = "".join(random.choice(string.ascii_lowercase))
     tree2.insert(j, str1)
-print(tree2)
+# print(tree2)
 tree3 = AVLTreeList()
 for i in range(7000):
     j = random.randint(0,i)
     str1 = "".join(random.choice(string.ascii_lowercase))
     tree3.insert(j, str1)
-print(tree3)
+# print(tree3)
 tree2.concat(tree3)
 print(tree2)
