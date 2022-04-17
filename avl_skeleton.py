@@ -706,8 +706,6 @@ class AVLTreeList(object):
     @returns: a list [left, val, right], where left is an AVLTreeList representing the list until index i-1,
     right is an AVLTreeList representing the list from index i+1, and val is the value at the i'th index.
     """
-    def join (self, i , other):
-        return None
 
     def split(self, i):
         smaller = AVLTreeList()
