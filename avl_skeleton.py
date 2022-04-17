@@ -4,91 +4,12 @@
 # id2      - 313247900
 # name2    - omri ravona
 
-###tester
-import random
-import string
+from utils.print_tree import printree
 
-
-def printree(t, bykey=False):
-    """Print a textual representation of t
-    bykey=True: show keys instead of values"""
-     #for row in trepr(t, bykey):
-     #       print(row)
-    return trepr(t, bykey)
-
-
-def trepr(t, bykey=False):
-    """Return a list of textual representations of the levels in t
-    bykey=True: show keys instead of values"""
-    if t == None:
-        return ["#"]
-
-    if t.height == -1:
-        return ["#"]
-
-    thistr = str(t.key) if bykey else str(t.value)
-
-    return conc(trepr(t.left, bykey), thistr, trepr(t.right, bykey))
-
-
-def conc(left, root, right):
-    """Return a concatenation of textual represantations of
-    a root node, its left node, and its right node
-    root is a string, and left and right are lists of strings"""
-
-    lwid = len(left[-1])
-    rwid = len(right[-1])
-    rootwid = len(root)
-
-    result = [(lwid + 1) * " " + root + (rwid + 1) * " "]
-
-    ls = leftspace(left[0])
-    rs = rightspace(right[0])
-    result.append(ls * " " + (lwid - ls) * "_" + "/" + rootwid * " " + "\\" + rs * "_" + (rwid - rs) * " ")
-
-    for i in range(max(len(left), len(right))):
-        row = ""
-        if i < len(left):
-            row += left[i]
-        else:
-            row += lwid * " "
-
-        row += (rootwid + 2) * " "
-
-        if i < len(right):
-            row += right[i]
-        else:
-            row += rwid * " "
-
-        result.append(row)
-
-    return result
-
-
-def leftspace(row):
-    """helper for conc"""
-    # row is the first row of a left node
-    # returns the index of where the second whitespace starts
-    i = len(row) - 1
-    while row[i] == " ":
-        i -= 1
-    return i + 1
-
-
-def rightspace(row):
-    """helper for conc"""
-    # row is the first row of a right node
-    # returns the index of where the first whitespace ends
-    i = 0
-    while row[i] == " ":
-        i += 1
-    return i
 """A class represnting a node in an AVL tree"""
-
 
 class AVLNode(object):
     """Constructor, you are allowed to add more fields.
-
 
     @type value: str
     @param value: data of your node
@@ -111,9 +32,7 @@ class AVLNode(object):
     """
 
     def getLeft(self):
-        if self.left.isRealNode():
-            return self.left
-        return None
+        return self.left
 
     """returns the right child
 
@@ -122,9 +41,7 @@ class AVLNode(object):
     """
 
     def getRight(self):
-        if self.right.isRealNode():
-            return self.right
-        return None
+        return self.right
 
     """returns the parent 
 
@@ -133,9 +50,7 @@ class AVLNode(object):
     """
 
     def getParent(self):
-        if self.parent.isRealNode():
-            return self.parent
-        return None
+        return self.parent
 
     """return the value
 
@@ -156,9 +71,13 @@ class AVLNode(object):
     """
 
     def getHeight(self):
-        if self.isRealNode():
-            return self.height
-        return -1
+        return self.height
+
+    def getSize(self):
+        return self.size
+
+    def setSize(self, size):
+        self.size = size
 
     """sets left child
 
@@ -257,6 +176,18 @@ class AVLTreeList(object):
             return True
         else:
             return False
+
+    def set_First(self, node):
+        self.firstNode = node
+
+    def get_First(self):
+        return self.firstNode
+
+    def set_Last(self, node):
+        self.lastNode = node
+
+    def get_Last(self):
+        return self.lastNode
 
     def setVirtualSons(self, node):
         node.left = AVLNode(None)
@@ -726,10 +657,19 @@ class AVLTreeList(object):
         if splitNode.left.isRealNode():
             smaller.root = splitNode.left
             smaller.lengthOfTree = splitNode.left.size
+            smaller.root.parent = AVLNode(None)
+            smaller.root.parent.left = smaller.root
+            smaller.root.parent.right = smaller.root
         if splitNode.right.isRealNode():
             bigger.root = splitNode.right
             bigger.lengthOfTree = splitNode.right.size
+            bigger.root.parent = AVLNode(None)
+            bigger.root.parent.left = bigger.root
+            bigger.root.parent.right = bigger.root
         while splitNode.parent.isRealNode():
+            temp = AVLNode(splitNode.parent.value)
+            temp.height = 0
+            temp.size = 1
             if splitNode.parent.right == splitNode:
                 joiningTree = AVLTreeList()
                 if splitNode.parent.left.isRealNode():
@@ -738,7 +678,7 @@ class AVLTreeList(object):
                     joiningTree.root.parent = AVLNode(None)
                     joiningTree.root.parent.right = joiningTree.root
                     joiningTree.root.parent.left = joiningTree.root
-                joiningTree.join(smaller, splitNode.parent)
+                joiningTree.join(smaller, temp)
                 smaller = joiningTree
             elif splitNode.parent.left == splitNode:
                 joiningTree = AVLTreeList()
@@ -748,12 +688,13 @@ class AVLTreeList(object):
                     joiningTree.root.parent = AVLNode(None)
                     joiningTree.root.parent.right = joiningTree.root
                     joiningTree.root.parent.left = joiningTree.root
-                bigger.join(joiningTree, splitNode.parent)
+                bigger.join(joiningTree, temp)
             splitNode = splitNode.parent
         smaller.firstNode = self. findMin(smaller.root)
         smaller.lastNode = self. findMax(smaller.root)
         bigger.firstNode = self.findMin(bigger.root)
         bigger.lastNode = self.findMax(bigger.root)
+        lst = [smaller, splitValue, bigger]
         return lst
 
     def findMin (self, node):
@@ -787,9 +728,6 @@ class AVLTreeList(object):
             TempNode = self.root
             self.delete(0)
             self.join(lst, TempNode)
-        # elif lst.lengthOfTree == 1:
-        #     heightDiff = self.root.height - lst.root.height
-        #     node = self.concatSelfTo1(lst)
         elif self.root.height <= lst.root.height:
             heightDiff = lst.root.height - self.root.height
             TempNode = self.lastNode
@@ -806,7 +744,10 @@ class AVLTreeList(object):
         ##joining a lst to self == empty
         if self.lengthOfTree == 0:
             self.joinWithEmpty(lst, TempNode)
-            self.RotateAfterJoin(self.firstNode.parent)################
+            # self.RotateAfterJoin(self.firstNode.parent)
+        elif lst.lengthOfTree == 0: ## concat will never enter here
+            lst.joinWithEmpty(self, TempNode, False)
+            # lst.RotateAfterJoin(lst.lastNode.parent)
         ##general case
         elif self.lengthOfTree <= lst.lengthOfTree:
             fixFromHere = self.prepForJoinBigTosmall(lst, TempNode)
@@ -815,16 +756,29 @@ class AVLTreeList(object):
             fixFromHere = self.prepForJoinsmallToBig(lst, TempNode)
             self.RotateAfterJoin(fixFromHere)
 
-    def joinWithEmpty(self, lst, TempNode):
+    def joinWithEmpty(self, lst, TempNode, bool = True):
         node = lst.root
-        while node.left.isRealNode():
-            node = node.left
-        node.left = TempNode
+        if bool:
+            while node.left.isRealNode():
+                node = node.left
+            node.left = TempNode
+        else:
+            while node.right.isRealNode():
+                node = node.right
+            node.right = TempNode
         TempNode.parent = node
-        lst.firstNode = TempNode
-        self.switchLstSelfWithLst(lst)
+        if bool:
+            lst.firstNode = TempNode
+            lst.setVirtualSons(lst.firstNode)
+            self.switchLstSelfWithLst(lst)
+        else:
+            lst.lastNode = TempNode
+            lst.setVirtualSons(lst.lastNode)
         self.lengthOfTree += 1
-        self.RotateAfterJoin(self.firstNode)
+        if bool:
+            self.RotateAfterJoin(self.firstNode)
+        else:
+            lst.RotateAfterJoin(lst.lastNode)
 
     def prepForJoinBigTosmall(self, lst, tmpNode):
         node = lst.root
@@ -879,12 +833,13 @@ class AVLTreeList(object):
             node.parent = tmpNode
             tmpNode.right = lst.root
             lst.root.parent = tmpNode
-            self.fixingPointers(lst, tmpNode)
+            # self.fixingPointers(lst, tmpNode)
             node = father
         return node
 
     def RotateAfterJoin(self, node):
         while node.isRealNode():
+            node.size = node.left.size + node.right.size + 1
             ballanceFactor = node.left.height - node.right.height
             if -2 < ballanceFactor < 2 and node.height == max(node.right.height, node.left.height) + 1:
                 node = node.parent
@@ -925,8 +880,8 @@ class AVLTreeList(object):
         self.firstNode = lst.firstNode
         self.root = lst.root
         self.lengthOfTree = lst.lengthOfTree
-        self.root.parent = self.virtualParent
         self.virtualParent = lst.virtualParent
+        self.root.parent = self.virtualParent
         lst.root = None
         lst.lengthOfTree = 0
         lst.firstNode = None
@@ -957,50 +912,3 @@ class AVLTreeList(object):
 
     def getRoot(self):
         return self.root
-
-##function for testing and debbug
-    def check(self):
-        tree = self
-        for i in range(tree.lengthOfTree):
-            node = tree.get_node(i)
-            if node.left.parent != node:
-                print(node.value + "left son prob")
-            if node.right.parent != node:
-                print(node.value + "right son prob")
-
-tree = AVLTreeList()
-tree.insert(0,"a")
-tree.insert(0,"b")
-tree.insert(0,"c")
-tree.insert(0,"d")
-tree.insert(0,"e")
-tree.insert(0,"f")
-tree.insert(0,"g")
-tree.insert(0,"h")
-tree.insert(0,"i")
-tree.insert(0,"j")
-tree.insert(0,"k")
-print(tree)
-lst = tree.split(4)
-print (lst[0])
-print (lst[1])
-print (lst[2])
-
-
-
-
-
-# tree2 = AVLTreeList()
-# for i in range(300):
-#     j = random.randint(0,i)
-#     str1 = "".join(random.choice(string.ascii_lowercase))
-#     tree2.insert(j, str1)
-# # print(tree2)
-# tree3 = AVLTreeList()
-# for i in range(7000):
-#     j = random.randint(0,i)
-#     str1 = "".join(random.choice(string.ascii_lowercase))
-#     tree3.insert(j, str1)
-# # print(tree3)
-# tree2.concat(tree3)
-# print(tree2)
