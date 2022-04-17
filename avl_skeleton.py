@@ -808,12 +808,15 @@ class AVLTreeList(object):
             self.RotateAfterJoin(fixFromHere)
 
     def joinWithEmpty(self, lst, TempNode):
-            lst.firstNode.left = TempNode
-            TempNode.parent = lst.firstNode
-            lst.firstNode = TempNode
-            self.switchLstSelfWithLst(lst)
-            self.lengthOfTree += 1
-            self.RotateAfterJoin(self.firstNode)
+        node = lst.root
+        while node.left.isRealNode():
+            node = node.left
+        node.left = TempNode
+        TempNode.parent = node
+        lst.firstNode = TempNode
+        self.switchLstSelfWithLst(lst)
+        self.lengthOfTree += 1
+        self.RotateAfterJoin(self.firstNode)
 
     def prepForJoinBigTosmall(self, lst, tmpNode):
         node = lst.root
