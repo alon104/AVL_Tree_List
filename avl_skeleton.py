@@ -713,7 +713,7 @@ class AVLTreeList(object):
         if i < 0 or i >= self.lengthOfTree:
             return [smaller, None, bigger]
         splitNode = self.get_node(i)
-        splitValue = self.retrieve(i)
+        splitValue = splitNode.value
         lst = [smaller, splitValue, bigger]
         if i == 0:
             self.delete(0)
@@ -729,31 +729,39 @@ class AVLTreeList(object):
         if splitNode.right.isRealNode():
             bigger.root = splitNode.right
             bigger.lengthOfTree = splitNode.right.size
-        while splitNode.isRealNode():
+        while splitNode.parent.isRealNode():
             if splitNode.parent.right == splitNode:
                 joiningTree = AVLTreeList()
-                joiningTree.root = splitNode.parent.left
-                joiningTree.lengthOfTree = joiningTree.root.size
+                if splitNode.parent.left.isRealNode():
+                    joiningTree.root = splitNode.parent.left
+                    joiningTree.lengthOfTree = joiningTree.root.size
+                    joiningTree.root.parent = AVLNode(None)
+                    joiningTree.root.parent.right = joiningTree.root
+                    joiningTree.root.parent.left = joiningTree.root
                 joiningTree.join(smaller, splitNode.parent)
                 smaller = joiningTree
             elif splitNode.parent.left == splitNode:
                 joiningTree = AVLTreeList()
-                joiningTree.root = splitNode.parent.right
-                joiningTree.lengthOfTree = joiningTree.root.size
+                if splitNode.parent.right.isRealNode():
+                    joiningTree.root = splitNode.parent.right
+                    joiningTree.lengthOfTree = joiningTree.root.size
+                    joiningTree.root.parent = AVLNode(None)
+                    joiningTree.root.parent.right = joiningTree.root
+                    joiningTree.root.parent.left = joiningTree.root
                 bigger.join(joiningTree, splitNode.parent)
             splitNode = splitNode.parent
-        smaller.firstNode = smaller.root.findMin()
-        smaller.lastNode = smaller.root.findMax()
-        bigger.firstNode = bigger.root.findMin()
-        bigger.lastNode = bigger.root.findMax()
+        smaller.firstNode = self. findMin(smaller.root)
+        smaller.lastNode = self. findMax(smaller.root)
+        bigger.firstNode = self.findMin(bigger.root)
+        bigger.lastNode = self.findMax(bigger.root)
         return lst
 
-    def findMin (node):
+    def findMin (self, node):
         while node.left.isRealNode():
             node = node.left
         return node
 
-    def findMax (node):
+    def findMax (self, node):
         while node.right.isRealNode():
             node = node.right
         return node
@@ -957,18 +965,39 @@ class AVLTreeList(object):
             if node.right.parent != node:
                 print(node.value + "right son prob")
 
+tree = AVLTreeList()
+tree.insert(0,"a")
+tree.insert(0,"b")
+tree.insert(0,"c")
+tree.insert(0,"d")
+tree.insert(0,"e")
+tree.insert(0,"f")
+tree.insert(0,"g")
+tree.insert(0,"h")
+tree.insert(0,"i")
+tree.insert(0,"j")
+tree.insert(0,"k")
+print(tree)
+lst = tree.split(4)
+print (lst[0])
+print (lst[1])
+print (lst[2])
 
-tree2 = AVLTreeList()
-for i in range(300):
-    j = random.randint(0,i)
-    str1 = "".join(random.choice(string.ascii_lowercase))
-    tree2.insert(j, str1)
+
+
+
+
+# tree2 = AVLTreeList()
+# for i in range(300):
+#     j = random.randint(0,i)
+#     str1 = "".join(random.choice(string.ascii_lowercase))
+#     tree2.insert(j, str1)
+# # print(tree2)
+# tree3 = AVLTreeList()
+# for i in range(7000):
+#     j = random.randint(0,i)
+#     str1 = "".join(random.choice(string.ascii_lowercase))
+#     tree3.insert(j, str1)
+# # print(tree3)
+# tree2.concat(tree3)
 # print(tree2)
-tree3 = AVLTreeList()
-for i in range(7000):
-    j = random.randint(0,i)
-    str1 = "".join(random.choice(string.ascii_lowercase))
-    tree3.insert(j, str1)
-# print(tree3)
-tree2.concat(tree3)
-print(tree2)
