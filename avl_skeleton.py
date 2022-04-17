@@ -706,9 +706,59 @@ class AVLTreeList(object):
     @returns: a list [left, val, right], where left is an AVLTreeList representing the list until index i-1,
     right is an AVLTreeList representing the list from index i+1, and val is the value at the i'th index.
     """
+    def join (self, i , other):
+        return None
 
     def split(self, i):
-        return None
+        smaller = AVLTreeList()
+        bigger = AVLTreeList()
+        if i < 0 or i >= self.lengthOfTree:
+            return [smaller, None, bigger]
+        splitNode = self.get_node(i)
+        splitValue = self.retrieve(i)
+        lst = [smaller, splitValue, bigger]
+        if i == 0:
+            self.delete(0)
+            lst[2] = self
+            return lst
+        elif i == self.lengthOfTree-1:
+            self.delete(i)
+            lst[0] = self
+            return lst
+        if splitNode.left.isRealNode():
+            smaller.root = splitNode.left
+            smaller.lengthOfTree = splitNode.left.size
+        if splitNode.right.isRealNode():
+            bigger.root = splitNode.right
+            bigger.lengthOfTree = splitNode.right.size
+        while splitNode.isRealNode():
+            if splitNode.parent.right == splitNode:
+                joiningTree = AVLTreeList()
+                joiningTree.root = splitNode.parent.left
+                joiningTree.lengthOfTree = joiningTree.root.size
+                joiningTree.join(smaller, splitNode.parent)
+                smaller = joiningTree
+            elif splitNode.parent.left == splitNode:
+                joiningTree = AVLTreeList()
+                joiningTree.root = splitNode.parent.right
+                joiningTree.lengthOfTree = joiningTree.root.size
+                bigger.join(joiningTree, splitNode.parent)
+            splitNode = splitNode.parent
+        smaller.firstNode = smaller.root.findMin()
+        smaller.lastNode = smaller.root.findMax()
+        bigger.firstNode = bigger.root.findMin()
+        bigger.lastNode = bigger.root.findMax()
+        return lst
+
+    def findMin (node):
+        while node.left.isRealNode():
+            node = node.left
+        return node
+
+    def findMax (node):
+        while node.right.isRealNode():
+            node = node.right
+        return node
 
     """concatenates lst to self
 
