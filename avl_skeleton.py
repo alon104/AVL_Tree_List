@@ -50,7 +50,10 @@ class AVLNode(object):
     """
 
     def getParent(self):
-        return self.parent
+        if self.parent.isRealNode():
+            return self.parent
+        else:
+            return None
 
     """return the value
 
@@ -69,9 +72,6 @@ class AVLNode(object):
     @rtype: int
     @returns: the height of self, -1 if the node is virtual
     """
-
-    def getHeight(self):
-        return self.height
 
     def getSize(self):
         return self.size
@@ -124,6 +124,9 @@ class AVLNode(object):
     @type h: int
     @param h: the height
     """
+
+    def getHeight(self):
+        return self.height
 
     def setHeight(self, h):
         self.height = h
@@ -222,7 +225,7 @@ class AVLTreeList(object):
             elif root.right.isRealNode():
                 return retrieve_rec(root.right, j - 1)
 
-        if i < 0 or not self.lengthOfTree == 0 or self.root.size > i + 1:
+        if i < 0 or self.lengthOfTree == 0 or self.root.size < i + 1:
             return None
         return retrieve_rec(self.root, i + 1).value
 
@@ -834,6 +837,8 @@ class AVLTreeList(object):
             tmpNode.right = lst.root
             lst.root.parent = tmpNode
             # self.fixingPointers(lst, tmpNode)
+            tmpNode.size = tmpNode.left.size + tmpNode.right.size +1
+            tmpNode.height = max(tmpNode.left.height, tmpNode.right.height) + 1
             node = father
         return node
 
@@ -912,3 +917,12 @@ class AVLTreeList(object):
 
     def getRoot(self):
         return self.root
+
+##functions for guy's tester
+    def append(self, val):
+        self.insert(self.length(), val)
+
+    def getTreeHeight(self):
+        if self.root == None:
+            return 0
+        return self.root.height
