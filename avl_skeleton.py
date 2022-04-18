@@ -464,6 +464,8 @@ class AVLTreeList(object):
             node = self.deleteLeaf(wanted)
         self.lengthOfTree -= 1
         self.correctSizeDelete(node)
+        self.firstNode = self.findMin(self.root)
+        self.lastNode = self.findMax(self.root)
 
         while node.isRealNode():
             ballanceFactor = node.left.height - node.right.height
@@ -561,7 +563,10 @@ class AVLTreeList(object):
             self.deleteLeaf(succ)
         succ.parent = node.parent
         node.parent = None
-        if succ.parent.left == node:
+        if not succ.parent.isRealNode():
+            succ.parent.left = succ
+            succ.parent.right == succ
+        elif succ.parent.left == node:
             succ.parent.left = succ
         else:
             succ.parent.right = succ
@@ -589,6 +594,8 @@ class AVLTreeList(object):
     """
 
     def first(self):
+        if self.firstNode is None:
+            return None
         return self.firstNode.value
 
     """returns the value of the last item in the list
@@ -598,6 +605,8 @@ class AVLTreeList(object):
     """
 
     def last(self):
+        if self.lastNode is None:
+            return None
         return self.lastNode.value
 
     """returns an array representing list 
@@ -701,11 +710,15 @@ class AVLTreeList(object):
         return lst
 
     def findMin (self, node):
+        if node is None:
+            return None
         while node.left.isRealNode():
             node = node.left
         return node
 
     def findMax (self, node):
+        if node is None:
+            return None
         while node.right.isRealNode():
             node = node.right
         return node
@@ -744,8 +757,17 @@ class AVLTreeList(object):
         return heightDiff
 
     def join(self, lst, TempNode):
+        if self.lengthOfTree == 0 and lst.lengthOfTree == 0: ##join both empty, concat never get's here
+            self.lengthOfTree += 1
+            self.root = TempNode
+            TempNode.parent = AVLNode(None)
+            TempNode.parent.left = TempNode
+            TempNode.parent.right = TempNode
+            self.firstNode = TempNode
+            self.lastNode = TempNode
+            self.setVirtualSons(TempNode)
         ##joining a lst to self == empty
-        if self.lengthOfTree == 0:
+        elif self.lengthOfTree == 0:
             self.joinWithEmpty(lst, TempNode)
             # self.RotateAfterJoin(self.firstNode.parent)
         elif lst.lengthOfTree == 0: ## concat will never enter here
@@ -774,10 +796,11 @@ class AVLTreeList(object):
             lst.firstNode = TempNode
             lst.setVirtualSons(lst.firstNode)
             self.switchLstSelfWithLst(lst)
+            self.lengthOfTree += 1
         else:
             lst.lastNode = TempNode
             lst.setVirtualSons(lst.lastNode)
-        self.lengthOfTree += 1
+            lst.lengthOfTree += 1
         if bool:
             self.RotateAfterJoin(self.firstNode)
         else:
@@ -836,9 +859,9 @@ class AVLTreeList(object):
             node.parent = tmpNode
             tmpNode.right = lst.root
             lst.root.parent = tmpNode
-            # self.fixingPointers(lst, tmpNode)
             tmpNode.size = tmpNode.left.size + tmpNode.right.size +1
             tmpNode.height = max(tmpNode.left.height, tmpNode.right.height) + 1
+            self.lengthOfTree = lst.lengthOfTree + self.lengthOfTree + 1
             node = father
         return node
 
@@ -920,7 +943,7 @@ class AVLTreeList(object):
 
 ##functions for guy's tester
     def append(self, val):
-        self.insert(self.length(), val)
+        return self.insert(self.length(), val)
 
     def getTreeHeight(self):
         if self.root == None:
