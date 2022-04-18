@@ -736,9 +736,9 @@ class AVLTreeList(object):
             return 0
         elif self.lengthOfTree == 0:
             self.switchLstSelfWithLst(lst)
-            return self.root.height
+            return self.root.height + 1
         elif lst.lengthOfTree == 0:
-            return self.root.height
+            return self.root.height + 1
         elif self.lengthOfTree == 1:
             heightDiff = lst.root.height - self.root.height
             TempNode = self.root
@@ -862,6 +862,7 @@ class AVLTreeList(object):
             tmpNode.size = tmpNode.left.size + tmpNode.right.size +1
             tmpNode.height = max(tmpNode.left.height, tmpNode.right.height) + 1
             self.lengthOfTree = lst.lengthOfTree + self.lengthOfTree + 1
+            self.lastNode = self.findMax(self.root)
             node = father
         return node
 
@@ -947,5 +948,20 @@ class AVLTreeList(object):
 
     def getTreeHeight(self):
         if self.root == None:
-            return 0
+            return -1
         return self.root.height
+
+# TR1 = AVLTreeList()
+# LR1 = list()
+# TR2 = AVLTreeList()
+# LR2 = list()
+#
+# for i in range(20):
+#         TR1.append(i)
+#         TR2.append(i+10)
+#         LR1.append(i)
+#         LR2.append(i+10)
+# print(TR1)
+# print(TR2)
+# TR1.concat(TR2)
+# print(TR1)
