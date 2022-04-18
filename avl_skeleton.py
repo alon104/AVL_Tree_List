@@ -950,18 +950,3 @@ class AVLTreeList(object):
         if self.root == None:
             return -1
         return self.root.height
-
-# TR1 = AVLTreeList()
-# LR1 = list()
-# TR2 = AVLTreeList()
-# LR2 = list()
-#
-# for i in range(20):
-#         TR1.append(i)
-#         TR2.append(i+10)
-#         LR1.append(i)
-#         LR2.append(i+10)
-# print(TR1)
-# print(TR2)
-# TR1.concat(TR2)
-# print(TR1)
