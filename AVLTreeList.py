@@ -769,10 +769,8 @@ class AVLTreeList(object):
         ##joining a lst to self == empty
         elif self.lengthOfTree == 0:
             self.joinWithEmpty(lst, TempNode)
-            # self.RotateAfterJoin(self.firstNode.parent)
         elif lst.lengthOfTree == 0: ## concat will never enter here
             lst.joinWithEmpty(self, TempNode, False)
-            # lst.RotateAfterJoin(lst.lastNode.parent)
         ##general case
         elif self.lengthOfTree <= lst.lengthOfTree:
             fixFromHere = self.prepForJoinBigTosmall(lst, TempNode)
