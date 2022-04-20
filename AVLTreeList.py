@@ -4,7 +4,6 @@
 # id2      - 313247900
 # name2    - omri ravona
 
-from utils.print_tree import printree
 
 """A class represnting a node in an AVL tree"""
 
@@ -940,7 +939,6 @@ class AVLTreeList(object):
     def getRoot(self):
         return self.root
 
-##functions for guy's tester
     def append(self, val):
         return self.insert(self.length(), val)
 
